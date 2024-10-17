@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1729190315354" clover="3.2.0">
+  <project timestamp="1729190315355" name="All files">
+    <metrics statements="33" coveredstatements="33" conditionals="12" coveredconditionals="12" methods="8" coveredmethods="8" elements="53" coveredelements="53" complexity="0" loc="33" ncloc="33" packages="1" files="1" classes="1"/>
+    <file name="app.js" path="/mnt/c/Users/Phurinat Musikanon/OneDrive/Documents/GitHub/ecommerce-lab-6509650658/ecommerce-lab/app.js">
+      <metrics statements="33" coveredstatements="33" conditionals="12" coveredconditionals="12" methods="8" coveredmethods="8"/>
+      <line num="1" count="1" type="stmt"/>
+      <line num="2" count="1" type="stmt"/>
+      <line num="4" count="1" type="stmt"/>
+      <line num="6" count="1" type="stmt"/>
+      <line num="12" count="1" type="stmt"/>
+      <line num="13" count="1" type="stmt"/>
+      <line num="17" count="1" type="stmt"/>
+      <line num="18" count="6" type="stmt"/>
+      <line num="19" count="7" type="stmt"/>
+      <line num="20" count="6" type="cond" truecount="2" falsecount="0"/>
+      <line num="21" count="5" type="stmt"/>
+      <line num="23" count="1" type="stmt"/>
+      <line num="28" count="1" type="stmt"/>
+      <line num="29" count="1" type="stmt"/>
+      <line num="35" count="1" type="stmt"/>
+      <line num="36" count="1" type="stmt"/>
+      <line num="40" count="1" type="stmt"/>
+      <line num="41" count="4" type="stmt"/>
+      <line num="42" count="6" type="stmt"/>
+      <line num="43" count="4" type="cond" truecount="2" falsecount="0"/>
+      <line num="44" count="3" type="cond" truecount="2" falsecount="0"/>
+      <line num="45" count="3" type="cond" truecount="2" falsecount="0"/>
+      <line num="46" count="3" type="cond" truecount="2" falsecount="0"/>
+      <line num="47" count="3" type="stmt"/>
+      <line num="49" count="1" type="stmt"/>
+      <line num="54" count="1" type="stmt"/>
+      <line num="55" count="2" type="stmt"/>
+      <line num="56" count="3" type="stmt"/>
+      <line num="57" count="2" type="cond" truecount="2" falsecount="0"/>
+      <line num="58" count="1" type="stmt"/>
+      <line num="59" count="1" type="stmt"/>
+      <line num="61" count="1" type="stmt"/>
+      <line num="65" count="1" type="stmt"/>
+    </file>
+  </project>
+</coverage>

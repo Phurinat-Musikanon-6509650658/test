@@ -1,0 +1,30 @@
+ PASS  __tests__/products.test.js (14.256 s)
+  GET /products
+    ✓ should return all products (47 ms)
+  GET /products/:id
+    ✓ should return a product by ID (3 ms)
+    ✓ should return 404 if product not found (2 ms)
+  POST /products
+    ✓ should add a new product (494 ms)
+  PUT /products/:id
+    ✓ should update an existing product (4 ms)
+    ✓ should not change the price if price is not provided (3 ms)
+    ✓ should not change the stock if stock is not provided (3 ms)
+    ✓ should return 404 if product not found (3 ms)
+  DELETE /products/:id
+    ✓ should delete a product (2 ms)
+    ✓ should return 404 if product not found (2 ms)
+
+----------|---------|----------|---------|---------|-------------------
+File      | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s
+----------|---------|----------|---------|---------|-------------------
+All files |     100 |      100 |     100 |     100 |
+ app.js   |     100 |      100 |     100 |     100 |
+----------|---------|----------|---------|---------|-------------------
+Test Suites: 1 passed, 1 total
+Tests:       10 passed, 10 total
+Snapshots:   0 total
+Time:        16.42 s
+Ran all test suites.
+
+//Phurinat Musikanon 6509650658
