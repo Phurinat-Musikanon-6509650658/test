@@ -17,16 +17,6 @@
 
 - Phurinat Musikanon   6509650658
 
-## Table of Contents 
-- [Project Goal](#project-goal)
-   - [Features](#features)
-   - [Technologies Used](#technologies-used)
-- [How to deploy and run the project manually](#how-to-deploy-and-run-the-project-manually)
-   - [1.Create an EC2 Instance](#1.create-an-ec2-instance)
-   - [2.Install Required Tools for the Project](#2.install-required-tools-for-the-project)
-   - [3.Clone the Project from GitHub to EC2 Instance](#3.clone-the-project-from-github-to-ec2-Instance)
-
-
 ## Project Goal
 
 The project goal is to improve the existing foodadvisor application by enhancing its features and simplifying the deployment process for users. The aim is to develop a web application that offers users a comprehensive platform for exploring and managing food-related content. It focuses on solving the problem of finding and managing food options through features like secure user registration, advanced search, community-driven reviews, and integration with external APIs for additional information.
@@ -616,5 +606,185 @@ describe('xxxxxx your feature name xxxxxx', () => {
 });
 ```
 
-## Node.js CI Workflow
+## Git Action CI/CD Pipeline
+### CI/CD Pipeline Overview
+CI/CD (Continuous Integration/Continuous Delivery/Deployment) is a process and set of practices designed to help teams develop and deploy software more quickly and with higher quality. The CI/CD pipeline refers to the tools and steps created to automate and streamline these workflows.
 
+### CIworkflow : CIworkflow.yml
+**Trigger Conditions:**
+- Triggered when:
+   - A push is made to the develop_docker_ci branch.
+   - A pull request targets the main branch.
+
+- CIworkflow.yml
+
+```yml
+name: CIworkflow
+run-name: ${{ github.actor }} is testing out GitHub Actions
+on: 
+    workflow_run:
+        workflows:
+          - IntegrationTest
+        types:
+          - completed
+        
+jobs:
+  Build-docker-images:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+    
+      - name: login docker
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Install Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version  # To verify installation
+          
+      - name: Build docker image
+        run: docker-compose -f ./docker-compose.yml up --build -d
+        
+      - name: Push to dockerHub
+        run: |
+          docker-compose -f ./docker-compose.yml push
+```
+
+### CDworkflow : CDworkflow.yml
+**Trigger Conditions:**
+- Triggered when:
+   - A push is made to the develop_cd_workflow branch.
+   - A pull request targets the main branch.
+
+- CDworkflow.yml
+
+```yml
+name: CDworkflow
+
+on: 
+    workflow_run:
+      workflows:
+        - CIworkflow
+      types:
+        - completed
+
+jobs:
+  check-image-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout Repository
+        uses: actions/checkout@v3    
+        
+      # Step 2: Check if Docker Image Exists
+      - name: Check if Fronend Docker Image Exists
+        id: check_frontend_image
+        run: |
+          REPOSITORY="${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.FRONTEND_IMAGE }}"  
+          TAG="latest"
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -u "${{ secrets.DOCKERHUB_USERNAME }}:${{ secrets.DOCKERHUB_TOKEN }}" https://hub.docker.com/v2/repositories/${REPOSITORY}/tags/${TAG}/)
+          if [ "$RESPONSE" -ne 200 ]; then
+              echo "Frontend Docker image not found. Exiting workflow."
+              exit 1
+          fi
+          echo "Frontend Docker image exists. Proceeding to deployment."
+      - name: Check if Backend Docker Image Exists
+        id: check_backend_image
+        run: |
+          REPOSITORY="${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.BACKEND_IMAGE }}"  
+          TAG="latest"
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -u "${{ secrets.DOCKERHUB_USERNAME }}:${{ secrets.DOCKERHUB_TOKEN }}" https://hub.docker.com/v2/repositories/${REPOSITORY}/tags/${TAG}/)
+          if [ "$RESPONSE" -ne 200 ]; then
+              echo "Backend Docker image not found. Exiting workflow."
+              exit 1
+          fi
+          echo "Backend Docker image exists. Proceeding to deployment."
+      # Step 3: Set AWS Credentials in Environment Variables
+      - name: Set AWS Credentials
+        if: ${{ steps.check_frontend_image.outcome == 'success' && steps.check_backend_image.outcome == 'success'}}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+        run: echo "AWS credentials set."
+
+      - name: Create EC2 instance 
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          # Define instance details
+          INSTANCE_ID=$(aws ec2 run-instances \
+            --image-id ami-06b21ccaeff8cd686 \
+            --instance-type t2.medium \
+            --key-name ${{ secrets.AWS_KP_NAME }} \
+            --security-group-ids ${{ secrets.AWS_SG_ID }} \
+            --user-data file://user-data.sh \
+            --query 'Instances[0].InstanceId' \
+            --output text)
+            
+          echo "Instance ID: $INSTANCE_ID"
+          
+          # Wait for the instance to be running
+          aws ec2 wait instance-running --instance-ids $INSTANCE_ID
+          
+          # Output the instance public DNS
+          INSTANCE_PUBLIC_DNS=$(aws ec2 describe-instances \
+            --instance-ids $INSTANCE_ID \
+            --query 'Reservations[0].Instances[0].PublicDnsName' \
+            --output text)
+          echo "Instance Public DNS: $INSTANCE_PUBLIC_DNS"
+          echo "INSTANCE_PUBLIC_DNS=$INSTANCE_PUBLIC_DNS" >> $GITHUB_ENV
+          
+          INSTANCE_PUBLIC_IPV4=$(aws ec2 describe-instances \
+            --instance-ids $INSTANCE_ID \
+            --query 'Reservations[0].Instances[0].PublicIpAddress' \
+            --output text)
+          echo "Instance Public IPv4: $INSTANCE_PUBLIC_IPV4"
+          echo "INSTANCE_PUBLIC_IPV4=$INSTANCE_PUBLIC_IPV4" >> $GITHUB_ENV
+          sleep 5
+      - name: Connect to instance and pull deploy docker images
+        env:
+            PRIVATE_KEY: ${{ secrets.KEY_PEM_DATA }}
+            REPOSITORYBACK: "${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.BACKEND_IMAGE }}"
+            REPOSITORYFRONT: "${{ secrets.DOCKERHUB_USERNAME }}/${{ vars.FRONTEND_IMAGE }}"
+        run: |
+          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+          ssh -o StrictHostKeyChecking=no -i private_key ${{ secrets.SSH_USER }}@${{ env.INSTANCE_PUBLIC_DNS }} << EOF
+          sudo yum install -y docker
+          sudo service docker start
+          echo "BACKEND"
+          sudo docker pull $REPOSITORYBACK:latest
+          sudo docker run -d --name ${{ vars.BACKEND_IMAGE }} \
+          -p 1337:1337 \
+          -e HOST=0.0.0.0 \
+          -e PORT=1337 \
+          -e STRAPI_ADMIN_CLIENT_URL=http://${INSTANCE_PUBLIC_IPV4}:3000 \
+          -e STRAPI_ADMIN_CLIENT_PREVIEW_SECRET=${{ secrets.STRAPI_ADMIN_CLIENT_PREVIEW_SECRET }} \
+          -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
+          $REPOSITORYBACK:latest
+          echo "FRONTEND"
+          echo $REPOSITORYFRONT:latest
+          sudo docker pull $REPOSITORYFRONT:latest
+          sudo docker run -d --name ${{ vars.FRONTEND_IMAGE }} \
+          -p 3000:3000 \
+          -e NEXT_PUBLIC_API_URL=http://${INSTANCE_PUBLIC_IPV4}:1337 \
+          -e PREVIEW_SECRET=${{ secrets.PREVIEW_SECRET }} \
+          $REPOSITORYFRONT:latest
+          echo BackEnd http://${INSTANCE_PUBLIC_IPV4}:1337/
+          echo FrontEnd http://${INSTANCE_PUBLIC_IPV4}:3000/
+          EOF
+```
