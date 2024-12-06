@@ -22,9 +22,9 @@
    - [Features](#features)
    - [Technologies Used](#technologies-used)
 - [How to deploy and run the project manually](#how-to-deploy-and-run-the-project-manually)
-   - [Create an EC2 Instance](#create-an-ec2-instance)
-   - [Install Required Tools for the Project](#install-required-tools-for-the-project)
-   - [Clone the Project from GitHub to EC2 Instance](#clone-the-project-from-github-to-ec2-Instance)
+   - [1.Create an EC2 Instance](#1.create-an-ec2-instance)
+   - [2.Install Required Tools for the Project](#2.install-required-tools-for-the-project)
+   - [3.Clone the Project from GitHub to EC2 Instance](#3.clone-the-project-from-github-to-ec2-Instance)
 
 
 ## Project Goal
@@ -48,7 +48,7 @@ The project goal is to improve the existing foodadvisor application by enhancing
 
 ## How to deploy and run the project manually
 
-**1. Create an EC2 Instance**
+###**1. Create an EC2 Instance**
  - Use Amazon `EC2` to create a new instance.
  - Choose `Amazon Linux` as the AMI (Amazon Machine Image).
  - Set the instance type to `t2.medium` or higher.
@@ -64,7 +64,7 @@ The project goal is to improve the existing foodadvisor application by enhancing
     
     -   **Type**:  `Custom TCP Rule`,  **Protocol**:  `TCP`,  **Port Range**:  `3000`,  **Source**:  `0.0.0.0/0`
  
-**2.Install Required Tools for the Project**
+###**2.Install Required Tools for the Project**
 - System require :
 	- git
 	- node (version 16)
@@ -91,13 +91,13 @@ npm install -g yarn
 npm install -g pm2
 ```
 
-**3.Clone the Project from GitHub to EC2 Instance**
+###**3.Clone the Project from GitHub to EC2 Instance**
  - Use Git to clone the project repository:
 ```bash
 git clone https://github.com/Phurinat-Musikanon-6509650658/CS360foodadvisor.git
 ```
 
-**4.Setup environment for Project**
+###**4.Setup environment for Project**
 - Navigate into the project directory: `cd CS360foodadvisor`
 - **Backend**
 	- change directory to `api` and create file `.env` with command
@@ -135,7 +135,7 @@ git clone https://github.com/Phurinat-Musikanon-6509650658/CS360foodadvisor.git
 	```
 	- you will get random key and then keep this key replace in `.env` be hide `STRAPI_ADMIN_CLIENT_PREVIEW_SECRET=`
 
-**5.Start the Strapi Server with PM2**
+###**5.Start the Strapi Server with PM2**
 - **Backend**
 	- Change directory into the `/api` folder by using `cd api`
 	- Install all dependencies and seed the database by using `yarn && yarn seed`
